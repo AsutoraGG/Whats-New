@@ -1,0 +1,16 @@
+{
+  "name": "what-new",
+  "version": "1.0.0",
+  "description": "its file size checker(befor and after size)",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AsutoraGG",
+  "license": "ISC",
+  "dependencies": {
+    "cli-table": "^0.3.11",
+    "gradient-string": "^2.0.2"
+  }
+}
