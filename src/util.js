@@ -9,7 +9,6 @@ function getTime() {
 }
 
 export function _print(atr, data) {
-
   atr = atr.toLowerCase();
   if (atr === "info") {
     console.log(getTime() + '\x1b[32m Info  ' + "\x1b[0m: " + data)
@@ -35,5 +34,11 @@ export function formatSize(bytes,decimalPoint) {
       dm = decimalPoint || 2,
       sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
       i = Math.floor(Math.log(bytes) / Math.log(k));
-  return (sizes[i] === undefined ? "Deleted or Created" : parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i])
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+}
+
+export const FileNumber =   {
+  tarkov  : 1,
+  Rust    : 2,
+  Valorant: 3
 }
