@@ -1,3 +1,4 @@
+/* Build => esbuild index.js --bundle --platform=node --target=node18  --outfile=out.js */
 import { _print, Title, formatSize, FileNumber } from './src/util.js';
 import { getChanges } from './src/file.js'
 
@@ -51,18 +52,18 @@ function start() {
 
     if(answer === "tarkov") {
       folderpath = "C:\\Game\\Tarkov"
-      main(FileNumber.tarkov)
+      main(FileNumber.tarkov, "Tarkov")
     } else if(answer === "rust") {
       folderpath = "C:\\SteamLibrary\\steamapps\\common\\Rust" 
-      main(FileNumber.Rust)
+      main(FileNumber.Rust, "Rust")
     } else {
       folderpath = "D:\\Valorant\\Riot Games\\VALORANT\\live"
-      main(FileNumber.Valorant)
+      main(FileNumber.Valorant, "Valorant")
     }
   })
 }
 
-async function main(number) {
+async function main(number, softwareName) {
   let OldData = await JSON.parse(readFileSync(`./src/save/${number}.json`));
   savetoJson(saveFileSize(folderpath), number)
 
@@ -76,8 +77,10 @@ async function main(number) {
   const WhatNew = getChanges(OldData, LatestData);
 
   if (!WhatNew.length > 0) {
-    _print("info", 'No Update!')
-    process.exit()
+    _print("info", 'No Update on ' + softwareName + "!")
+    setTimeout(() => {
+      start()
+    }, 3000)
   } else {
     var updateListTable = new Table({
       head: ["\x1b[33mPATH (\x1b[35m" + folderpath + "\x1b[33m)", "\x1b[32mChanged Amount"],
@@ -91,7 +94,7 @@ async function main(number) {
     WhatNew.forEach((data) => {
       if (!data.hasOwnProperty("isDeleted")) {
         updateListTable.push(
-          [data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path, (data.changeSymbol === "+" ? "\x1b[42m\x1b[30m" + "+" + formatSize(data.changeAmount) : "\x1b[41m\x1b[30m" + "-" + (formatSize(data.changeAmount) === NaN ? "Deleted or Created!" : formatSize(data.changeAmount))) + "\x1b[0m"]
+          [data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path, (data.changeSymbol === "+" ? "\x1b[42m\x1b[30m" + "+" + formatSize(data.changeAmount) : "\x1b[41m\x1b[30m" + "-" + formatSize(data.changeAmount)) + "\x1b[0m"]
         )
       } else {
         updateListTable.push(
@@ -107,6 +110,9 @@ async function main(number) {
     })
 
     console.log(resultTable.toString())
+    setTimeout(() => {
+      start()
+    }, 3000)
   };
 }
 
