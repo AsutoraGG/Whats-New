@@ -1,6 +1,7 @@
 /* Build => esbuild index.js --bundle --platform=node --target=node18  --outfile=out.js */
 import { _print, Title, formatSize, FileNumber } from './src/util.js';
 import { getChanges } from './src/file.js'
+import { config } from './src/conf.js';
 
 import path from 'path';
 import { readFileSync, readdirSync, statSync, writeFileSync } from "fs"
@@ -11,7 +12,7 @@ import inquirer from 'inquirer';
 let folderpath = "C:\\Game\\Tarkov"
 /* ──────────────────────────────────────────────────────────────────── */
 function isExcludedFolder(folderName) {
-    const excludedFolders = ['Logs', 'MonoBleedingEdge', 'cache', 'BattlEye', 'NLog', "temp", "cfg", "EasyAntiCheat", "ThirdParty"];
+    const excludedFolders = ['Culling_Data', 'Logs', 'MonoBleedingEdge', 'cache', 'BattlEye', 'NLog', "temp", "cfg", "EasyAntiCheat", "ThirdParty"];
     return excludedFolders.includes(folderName);
 }
 
@@ -25,7 +26,7 @@ function saveFileSize(folderPath) {
       const stats = statSync(filePath);
       if (stats.isFile()) {
         result[file] = stats.size;
-      } else if (stats.isDirectory() && !isExcludedFolder(file)) {
+      } else if (stats.isDirectory() && !isExcludedFolder(file) && !file.includes(".bytes")) {
         result[file] = saveFileSize(filePath);
       }
     });
@@ -37,68 +38,146 @@ function savetoJson(object, number) {
   writeFileSync(`./src/save/${number}.json`, JSON.stringify(object, null, 2));
 }
 
+function settings() {
+  inquirer.prompt([
+    {
+      name: "config1",
+      type: "list",
+      message: "Showing Created Files: ",
+      choices: ["Enable", "Disable"]
+    },
+    {
+      name: "config2",
+      type: "list",
+      message: "Showing Deleted Files: ",
+      choices: ["Enable", "Disable"]
+    },
+    {
+      name: "config3",
+      type: "list",
+      message: "Showing - Files: ",
+      choices: ["Enable", "Disable"]
+    },
+    {
+      name: "config5",
+      type: "list",
+      message: "Showing + Files: ",
+      choices: ["Enable", "Disable"]
+    },
+    {
+      name: "config4",
+      type: "list",
+      message: "Select Wich Using Language in this program: ",
+      choices: ["Japanese", "English"]
+    },
+    {
+      name: "config6",
+      type: "list",
+      message: "Don't save new data!(dev)",
+      choices: ["Enable", "Disable"]
+    }
+  ]).then(answer => {
+    config.EnableCreated    = (answer.config1 === "Enable" ? true : false)
+    config.EnableDeleted    = (answer.config2 === "Enable" ? true : false)
+    config.Enabledecrease   = (answer.config3 === "Enable" ? true : false)
+    config.EnableIncreased  = (answer.config5 === "Enable" ? true : false)
+    config.japanese         = (answer.config4 === "Japanese" ? true : false)
+    config.DontSaveNewData  = (answer.config6 === "Enable" ? true : false)
+    console.clear()
+    _print('info', "Saved Settings(One Time)", "設定を保存しました")
+    Title()
+    start()
+  })
+}
+
 function start() {
   inquirer.prompt([
     {
       name: "programlist",
-      type: "rawlist",
-      message: "Select which program to check",
-      choices: ["Tarkov", "Rust", "Valorant"]
+      type: "list",
+      message: "Select which program to check: ",
+      choices: ["[1]: Tarkov", "[2]: Rust", "[3]: Valorant", "[4]: Back to Settings"]
     }
   ]).then(answer => {
-    answer = answer.programlist.toLowerCase()
+    answer = answer.programlist
     console.clear()
     Title();
 
-    if(answer === "tarkov") {
+    if(answer.includes("[1]")) {
+      console.clear()
       folderpath = "C:\\Game\\Tarkov"
       main(FileNumber.tarkov, "Tarkov")
-    } else if(answer === "rust") {
+    } else if(answer.includes("[2]")) {
+      console.clear()
       folderpath = "C:\\SteamLibrary\\steamapps\\common\\Rust" 
       main(FileNumber.Rust, "Rust")
-    } else {
+    } else if(answer.includes("[3]")){
+      console.clear()
       folderpath = "D:\\Valorant\\Riot Games\\VALORANT\\live"
       main(FileNumber.Valorant, "Valorant")
+    } else if(answer.includes("[4]")){
+      console.clear();
+      settings()
     }
   })
 }
 
 async function main(number, softwareName) {
+  Title()
+  //console.log("Enabledecrease: " + config.Enabledecrease, "EnableIncreased: " + config.EnableIncreased, "EnableDeleted: " + config.EnableDeleted, "EnableCreated:"+ config.EnableCreated)
   let OldData = await JSON.parse(readFileSync(`./src/save/${number}.json`));
-  savetoJson(saveFileSize(folderpath), number)
+
+  if(config.DontSaveNewData === false) {
+    savetoJson(saveFileSize(folderpath), number)
+  }
+  let LatestData;
 
   if (Object.keys(OldData).length === 0) {
-    _print("info", "No Update! because it's first time! please later!")
+    _print("info", "No Update! because it's first time! try please later!", "更新はありません!これは初回起動だからです!あとでもう一度試してみてください")
     process.exit()
   }
 
-  let LatestData = JSON.parse(readFileSync(`./src/save/${number}.json`));
+  if(config.DontSaveNewData === false) {
+    LatestData = JSON.parse(readFileSync(`./src/save/${number}.json`));
+  } else {
+    LatestData = saveFileSize(folderpath)
+  }
 
-  const WhatNew = getChanges(OldData, LatestData);
+  const WhatNew = await getChanges(OldData, LatestData);
 
-  if (!WhatNew.length > 0) {
-    _print("info", 'No Update on ' + softwareName + "!")
+  let deletedCount = 0
+  let createdCount = 0
+
+  if (!(WhatNew.length > 0)) {
+    _print("info", 'No Update on ' + softwareName + "!", softwareName + "に更新は確認されませんでした!")
     setTimeout(() => {
       start()
     }, 3000)
   } else {
     var updateListTable = new Table({
-      head: ["\x1b[33mPATH (\x1b[35m" + folderpath + "\x1b[33m)", "\x1b[32mChanged Amount"],
+      head: ["\x1b[33mFilePath (\x1b[35m" + folderpath + "\x1b[33m)", "\x1b[32mChanged Amount", "\x1b[34mFinal Size"],
       style: {
         compact: true
       }
     })
-    _print('info', "Update Detected!")
-    console.log("                " + '─────── Updates List ───────')
+    _print('info', "Update Detected!", "更新が確認されました!")
 
     WhatNew.forEach((data) => {
       if (!data.hasOwnProperty("isDeleted")) {
         updateListTable.push(
-          [data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path, (data.changeSymbol === "+" ? "\x1b[42m\x1b[30m" + "+" + formatSize(data.changeAmount) : "\x1b[41m\x1b[30m" + "-" + formatSize(data.changeAmount)) + "\x1b[0m"]
+          [
+          data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path,
+          (data.changeSymbol === "+" ? "\x1b[42m\x1b[30m" + "+" + formatSize(data.changeAmount) : "\x1b[41m\x1b[30m" + "-" + formatSize(data.changeAmount)) + "\x1b[0m",
+          (formatSize(data.finalAmount).toString() === "NaN undefined" ? "No Data!" : formatSize(data.finalAmount))
+          ]
         )
       } else {
         updateListTable.push(
-          [data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path, (data.changeSymbol === "+" ? "\x1b[42m\x1b[30m" + "was Created!" : "\x1b[41m\x1b[30m" + "was Deleted!") + "\x1b[0m"]
+          [
+            data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path,
+            (data.changeSymbol === "+" ? (() => { createdCount += 1; return "\x1b[42m\x1b[30m" + "was Created!"; })() : (() => { deletedCount += 1; return "\x1b[41m\x1b[30m" + "was Deleted!"; })()) + "\x1b[0m",
+            (formatSize(data.finalAmount).toString() === "NaN undefined" ? "No Data!" : formatSize(data.finalAmount))
+          ]
         )
       }
     });
@@ -106,7 +185,7 @@ async function main(number, softwareName) {
     console.log(updateListTable.toString());
 
     var resultTable = new Table({
-      head: [`\x1b[37mA total of \x1b[31m${WhatNew.length}\x1b[37m files have been updated`]
+      head: [`\x1b[37mA total of \x1b[31m${WhatNew.length}\x1b[37m files have been updated`, `\x1b[37mCreated \x1b[31m${config.EnableCreated === true? createdCount : "(Not Enabled)"}\x1b[37m and Deleted \x1b[31m${config.EnableDeleted === true ? deletedCount : "(Not Enabled"}\x1b[37mfiles`]
     })
 
     console.log(resultTable.toString())
@@ -118,5 +197,4 @@ async function main(number, softwareName) {
 
 /* ──────────────────────────────────────────────────────────────────── */
 Title()
-
-start()
+settings()
