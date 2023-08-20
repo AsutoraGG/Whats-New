@@ -65,6 +65,12 @@ function settings() {
       choices: ["Enable", "Disable"]
     },
     {
+      name: "config7",
+      type: "list",
+      message: "Only showing 1MB or more",
+      choices: ["Enable", "Disable"]
+    },
+    {
       name: "config4",
       type: "list",
       message: "Select Wich Using Language in this program: ",
@@ -73,7 +79,7 @@ function settings() {
     {
       name: "config6",
       type: "list",
-      message: "Don't save new data!(dev)",
+      message: "Don't save new data(Not Recommend!)",
       choices: ["Enable", "Disable"]
     }
   ]).then(answer => {
@@ -83,6 +89,7 @@ function settings() {
     config.EnableIncreased  = (answer.config5 === "Enable" ? true : false)
     config.japanese         = (answer.config4 === "Japanese" ? true : false)
     config.DontSaveNewData  = (answer.config6 === "Enable" ? true : false)
+    config.EnableOnlyMB     = (answer.config7 === "Enable" ? true : false)
     console.clear()
     _print('info', "Saved Settings(One Time)", "設定を保存しました")
     Title()
@@ -147,6 +154,8 @@ async function main(number, softwareName) {
 
   let deletedCount = 0
   let createdCount = 0
+  let increasedSize= 0
+  let decreaseSize = 0
 
   if (!(WhatNew.length > 0)) {
     _print("info", 'No Update on ' + softwareName + "!", softwareName + "に更新は確認されませんでした!")
@@ -167,31 +176,30 @@ async function main(number, softwareName) {
         updateListTable.push(
           [
           data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path,
-          (data.changeSymbol === "+" ? "\x1b[42m\x1b[30m" + "+" + formatSize(data.changeAmount) : "\x1b[41m\x1b[30m" + "-" + formatSize(data.changeAmount)) + "\x1b[0m",
-          (formatSize(data.finalAmount).toString() === "NaN undefined" ? "No Data!" : formatSize(data.finalAmount))
+          (data.changeSymbol === "+" ? (() => { increasedSize += data.changeAmount; return "\x1b[46m\x1b[30m" + "+" + formatSize(data.changeAmount)})() : (() => {decreaseSize += data.changeAmount; return "\x1b[45m\x1b[30m" + "-" + formatSize(data.changeAmount)})()) + "\x1b[0m",
+          (formatSize(data.finalAmount).toString() === "NaN undefined" ? "Error!" : formatSize(data.finalAmount))
           ]
         )
       } else {
         updateListTable.push(
           [
             data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path,
-            (data.changeSymbol === "+" ? (() => { createdCount += 1; return "\x1b[42m\x1b[30m" + "was Created!"; })() : (() => { deletedCount += 1; return "\x1b[41m\x1b[30m" + "was Deleted!"; })()) + "\x1b[0m",
-            (formatSize(data.finalAmount).toString() === "NaN undefined" ? "No Data!" : formatSize(data.finalAmount))
+            (data.changeSymbol === "+" ? (() => { createdCount += 1; increasedSize += data.finalAmount; return "\x1b[42m\x1b[30m" + "was Created!"; })() : (() => { deletedCount += 1; decreaseSize += data.finalAmount; return "\x1b[41m\x1b[30m" + "was Deleted!"; })()) + "\x1b[0m",
+            (formatSize(data.finalAmount).toString() === "NaN undefined" ? "Error!" : formatSize(data.finalAmount))
           ]
         )
       }
     });
-
     console.log(updateListTable.toString());
 
     var resultTable = new Table({
-      head: [`\x1b[37mA total of \x1b[31m${WhatNew.length}\x1b[37m files have been updated`, `\x1b[37mCreated \x1b[31m${config.EnableCreated === true? createdCount : "(Not Enabled)"}\x1b[37m and Deleted \x1b[31m${config.EnableDeleted === true ? deletedCount : "(Not Enabled"}\x1b[37mfiles`]
+      head: [`\x1b[37mA total of \x1b[31m\x1b[1m${WhatNew.length}\x1b[0m\x1b[37m files have been updated`, `\x1b[37mCreated \x1b[31m\x1b[1m${config.EnableCreated === true? createdCount : "(Not Enabled)"}\x1b[0m\x1b[37m and Deleted \x1b[31m\x1b[1m${config.EnableDeleted === true ? deletedCount : "(Not Enabled)"} \x1b[37m\x1b[0mfiles`, `\x1b[1m+${formatSize(increasedSize)} \x1b[0m\x1b[37mand\x1b[31m\x1b[1m -${formatSize(decreaseSize)}\x1b[0m`]
     })
 
     console.log(resultTable.toString())
     setTimeout(() => {
       start()
-    }, 3000)
+    }, 3000) 
   };
 }
 
