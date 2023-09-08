@@ -1882,12 +1882,9 @@
   },
   "GameAssembly.dll": 56898328,
   "maps": {
-    "4000_FQJYChTTOEu57Id5a95PZA.map": 54534293,
-    "procedural__4000_VwoovM7lNEa9_DQ32KJNww.map": 54077212,
     "ukn_training_v1.4.8.3.map": 21538077
   },
-  "output_log.txt": 127251,
-  "rust-cfg.zip": 3207,
+  "output_log.txt": 21559,
   "Rust.exe": 4326680,
   "RustClient.exe": 663320,
   "RustClient_Data": {

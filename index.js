@@ -1,5 +1,5 @@
 /* Build => esbuild index.js --bundle --platform=node --target=node18  --outfile=out.js */
-import { _print, Title, formatSize, FileNumber } from './src/util.js';
+import { _print, Title, formatSize, FileNumber, clear } from './src/util.js';
 import { getChanges } from './src/file.js'
 import { config } from './src/conf.js';
 
@@ -107,23 +107,21 @@ function start() {
     }
   ]).then(answer => {
     answer = answer.programlist
-    console.clear()
+    clear()
     Title();
 
     if(answer.includes("[1]")) {
-      console.clear()
+      console.log('Currently Disabled Fuck off');
+      start(); /*
       folderpath = "C:\\Game\\Tarkov"
-      main(FileNumber.tarkov, "Tarkov")
+      main(FileNumber.tarkov, "Tarkov") */
     } else if(answer.includes("[2]")) {
-      console.clear()
-      folderpath = "C:\\SteamLibrary\\steamapps\\common\\Rust" 
+      folderpath = "C:\\Steam_SSD\\steamapps\\common\\Rust" 
       main(FileNumber.Rust, "Rust")
     } else if(answer.includes("[3]")){
-      console.clear()
-      folderpath = "D:\\Valorant\\Riot Games\\VALORANT\\live"
+      folderpath = "C:\\Riot Games\\VALORANT\\live"
       main(FileNumber.Valorant, "Valorant")
     } else if(answer.includes("[4]")){
-      console.clear();
       settings()
     }
   })

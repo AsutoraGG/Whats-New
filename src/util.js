@@ -26,6 +26,10 @@ export function Title() {
   console.log(gradient.rainbow(`                                        github.com/AsutoraGG/Whats-New\n                              `))
 }
 
+export function clear() {
+  return process.stdout.write('\x1bc')
+}
+
 export function formatSize(bytes,decimalPoint) {
   if(bytes == 0) return '0 Bytes';
   var k = 1000,
