@@ -4,12 +4,12 @@ import { getChanges } from './src/file.js'
 import { config } from './src/conf.js';
 
 import path from 'path';
-import { readFileSync, readdirSync, statSync, writeFileSync } from "fs"
+import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from "fs"
 
 import Table from 'cli-table'
 import inquirer from 'inquirer';
 
-let folderpath = "C:\\Game\\Tarkov"
+let folderpath = "D:\\Genshin Impact"
 /* ──────────────────────────────────────────────────────────────────── */
 function isExcludedFolder(folderName) {
     const excludedFolders = ['Culling_Data', 'Logs', 'MonoBleedingEdge', 'cache', 'BattlEye', 'NLog', "temp", "cfg", "EasyAntiCheat", "ThirdParty"];
@@ -36,20 +36,20 @@ function saveFileSize(folderPath) {
 
 function savetoJson(object, number) {
   writeFileSync(`./src/save/${number}.json`, JSON.stringify(object, null, 2));
-}
+}  
 
 function settings() {
   inquirer.prompt([
     {
       name: "config1",
       type: "list",
-      message: "Showing Created Files: ",
+      message: "Show Created Files: ",
       choices: ["Enable", "Disable"]
     },
     {
       name: "config2",
       type: "list",
-      message: "Showing Deleted Files: ",
+      message: "Show Deleted Files: ",
       choices: ["Enable", "Disable"]
     },
     {
@@ -67,7 +67,7 @@ function settings() {
     {
       name: "config7",
       type: "list",
-      message: "Only showing 1MB or more",
+      message: "Only show 1MB or more",
       choices: ["Enable", "Disable"]
     },
     {
@@ -91,7 +91,7 @@ function settings() {
     config.DontSaveNewData  = (answer.config6 === "Enable" ? true : false)
     config.EnableOnlyMB     = (answer.config7 === "Enable" ? true : false)
     console.clear()
-    _print('info', "Saved Settings(One Time)", "設定を保存しました")
+    _print('info', "Saved Settings(One Time)", "設定を保存しました(一度限り)")
     Title()
     start()
   })
@@ -103,7 +103,7 @@ function start() {
       name: "programlist",
       type: "list",
       message: "Select which program to check: ",
-      choices: ["[1]: Tarkov", "[2]: Rust", "[3]: Valorant", "[4]: Back to Settings"]
+      choices: ["[1]: Genshin", "[2]: Rust", "[3]: Valorant", "[4]: Back to Settings"]
     }
   ]).then(answer => {
     answer = answer.programlist
@@ -111,15 +111,13 @@ function start() {
     Title();
 
     if(answer.includes("[1]")) {
-      console.log('Currently Disabled Fuck off');
-      start(); /*
-      folderpath = "C:\\Game\\Tarkov"
-      main(FileNumber.tarkov, "Tarkov") */
+      folderpath = "D:\\Genshin Impact"
+      main(FileNumber.genshin, "Genshin Impact")
     } else if(answer.includes("[2]")) {
-      folderpath = "C:\\Steam_SSD\\steamapps\\common\\Rust" 
+      folderpath = "C:\\Steam_SSD\\steamapps\\common\\Rust" // Change Here!
       main(FileNumber.Rust, "Rust")
     } else if(answer.includes("[3]")){
-      folderpath = "C:\\Riot Games\\VALORANT\\live"
+      folderpath = "D:\\Riot Games\\VALORANT\\live"
       main(FileNumber.Valorant, "Valorant")
     } else if(answer.includes("[4]")){
       settings()
@@ -138,7 +136,7 @@ async function main(number, softwareName) {
   let LatestData;
 
   if (Object.keys(OldData).length === 0) {
-    _print("info", "No Update! because it's first time! try please later!", "更新はありません!これは初回起動だからです!あとでもう一度試してみてください")
+    _print("info", "No Update! because it's first time! please try later!", "更新はありません!これは初回起動だからです!あとでもう一度試してみてください")
     process.exit()
   }
 
@@ -156,7 +154,7 @@ async function main(number, softwareName) {
   let decreaseSize = 0
 
   if (!(WhatNew.length > 0)) {
-    _print("info", 'No Update on ' + softwareName + "!", softwareName + "に更新は確認されませんでした!")
+    _print("info", 'No Update in ' + softwareName + "!", softwareName + "に更新は確認されませんでした!")
     setTimeout(() => {
       start()
     }, 3000)

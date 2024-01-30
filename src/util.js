@@ -24,6 +24,7 @@ export function Title() {
   console.log(gradient.morning("                    ╚███╔███╔╝██║  ██║██║  ██║   ██║   ███████║    ██║ ╚████║███████╗╚███╔███╔╝  "))
   console.log(gradient.morning("                     ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝    ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝   "))
   console.log(gradient.rainbow(`                                        github.com/AsutoraGG/Whats-New\n                              `))
+  
 }
 
 export function clear() {
@@ -40,7 +41,7 @@ export function formatSize(bytes,decimalPoint) {
 }
 
 export const FileNumber =   {
-  tarkov  : 1,
+  genshin  : 1,
   Rust    : 2,
   Valorant: 3
 }

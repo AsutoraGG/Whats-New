@@ -4,5 +4,6 @@ export let config = {
     Enabledecrease: true,
     EnableIncreased: true,
     DontSaveNewData: false,
+    EnableOnlyMB: true,
     japanese: false
 }
