@@ -2,16 +2,22 @@
   "name": "what-new",
   "version": "1.0.0",
   "description": "its file size checker(befor and after size)",
-  "main": "index.js",
+  "main": "index.mjs",
   "type": "module",
+  "bin": "out.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "AsutoraGG",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^5.3.0",
     "cli-table": "^0.3.11",
     "gradient-string": "^2.0.2",
     "inquirer": "^9.2.10"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "pkg": "^5.8.1"
   }
 }

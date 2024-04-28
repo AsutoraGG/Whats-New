@@ -43,5 +43,6 @@ export function formatSize(bytes,decimalPoint) {
 export const FileNumber =   {
   genshin  : 1,
   Rust    : 2,
-  Valorant: 3
+  Valorant: 3,
+  Siege: 4
 }
