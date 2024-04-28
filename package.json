@@ -2,7 +2,7 @@
   "name": "what-new",
   "version": "1.0.0",
   "description": "its file size checker(befor and after size)",
-  "main": "index.mjs",
+  "main": "index.js",
   "type": "module",
   "bin": "out.js",
   "scripts": {

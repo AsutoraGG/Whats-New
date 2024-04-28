@@ -1,4 +1,5 @@
 /* Build => esbuild index.js --bundle --platform=node --target=node18  --outfile=out.js */
+/* to do -> add filter, add save to file */
 import { _print, Title, formatSize, FileNumber, clear } from './src/util.js';
 import { getChanges } from './src/file.js'
 import { config } from './src/conf.js';
@@ -8,6 +9,7 @@ import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from "
 
 import Table from 'cli-table'
 import inquirer from 'inquirer';
+import chalk from 'chalk';
 
 let folderpath = "D:\\Genshin Impact"
 /* ──────────────────────────────────────────────────────────────────── */
@@ -39,7 +41,12 @@ function savetoJson(object, number) {
 }  
 
 function settings() {
-  inquirer.prompt([
+  inquirer.prompt([/*
+    {
+      name: "config8",
+      type: "input",
+      message: "フィルターを使用する場合の文字: "
+    },*/
     {
       name: "config1",
       type: "list",
@@ -55,19 +62,19 @@ function settings() {
     {
       name: "config3",
       type: "list",
-      message: "Showing - Files: ",
+      message: "Show - Files: ",
       choices: ["Enable", "Disable"]
     },
     {
       name: "config5",
       type: "list",
-      message: "Showing + Files: ",
+      message: "Show + Files: ",
       choices: ["Enable", "Disable"]
     },
     {
       name: "config7",
       type: "list",
-      message: "Only show 1MB or more",
+      message: "Only 1MB or more",
       choices: ["Enable", "Disable"]
     },
     {
@@ -90,6 +97,7 @@ function settings() {
     config.japanese         = (answer.config4 === "Japanese" ? true : false)
     config.DontSaveNewData  = (answer.config6 === "Enable" ? true : false)
     config.EnableOnlyMB     = (answer.config7 === "Enable" ? true : false)
+    //config.filter           = (answer.config8)
     console.clear()
     _print('info', "Saved Settings(One Time)", "設定を保存しました(一度限り)")
     Title()
@@ -102,8 +110,8 @@ function start() {
     {
       name: "programlist",
       type: "list",
-      message: "Select which program to check: ",
-      choices: ["[1]: Genshin", "[2]: Rust", "[3]: Valorant", "[4]: Back to Settings"]
+      message: "Please select which program to check: ",
+      choices: ["[1]: Genshin", "[2]: Rust", "[3]: Valorant", "[4]: R6S", "[5]: Back to Settings"]
     }
   ]).then(answer => {
     answer = answer.programlist
@@ -120,6 +128,9 @@ function start() {
       folderpath = "D:\\Riot Games\\VALORANT\\live"
       main(FileNumber.Valorant, "Valorant")
     } else if(answer.includes("[4]")){
+      folderpath = "C:\\Steam_SSD\\steamapps\\common\\Tom Clancy's Rainbow Six Siege"
+      main(FileNumber.Siege, "R6S")
+    } else {
       settings()
     }
   })
@@ -127,7 +138,6 @@ function start() {
 
 async function main(number, softwareName) {
   Title()
-  //console.log("Enabledecrease: " + config.Enabledecrease, "EnableIncreased: " + config.EnableIncreased, "EnableDeleted: " + config.EnableDeleted, "EnableCreated:"+ config.EnableCreated)
   let OldData = await JSON.parse(readFileSync(`./src/save/${number}.json`));
 
   if(config.DontSaveNewData === false) {
@@ -154,21 +164,21 @@ async function main(number, softwareName) {
   let decreaseSize = 0
 
   if (!(WhatNew.length > 0)) {
-    _print("info", 'No Update in ' + softwareName + "!", softwareName + "に更新は確認されませんでした!")
+    _print("info", 'Not detected Update in ' + softwareName + "!", softwareName + "に更新は確認されませんでした!")
     setTimeout(() => {
       start()
     }, 3000)
   } else {
     var updateListTable = new Table({
-      head: ["\x1b[33mFilePath (\x1b[35m" + folderpath + "\x1b[33m)", "\x1b[32mChanged Amount", "\x1b[34mFinal Size"],
+      head: [chalk.magenta("FilePath") + chalk.white.bold(folderpath), chalk.green("Changed Size"), chalk.blue("Final Size")],
       style: {
         compact: true
       }
     })
-    _print('info', "Update Detected!", "更新が確認されました!")
-
-    WhatNew.forEach((data) => {
-      if (!data.hasOwnProperty("isDeleted")) {
+    _print('info', "Update Detected!", "更新が確認されました!データテーブルを作成しています・・・")
+    
+    function updateDates(data, isDeleted) {
+      if(isDeleted === true) {
         updateListTable.push(
           [
           data.path.includes("exe") ? "\x1b[35m" + data.path + "\x1b[0m" : data.path,
@@ -184,6 +194,26 @@ async function main(number, softwareName) {
             (formatSize(data.finalAmount).toString() === "NaN undefined" ? "Error!" : formatSize(data.finalAmount))
           ]
         )
+      }
+    }
+
+    WhatNew.forEach((data) => {
+      if (!data.hasOwnProperty("isDeleted")) {
+        if(config.EnableOnlyMB === true) {
+          if(data.finalAmount >= 1000000) {
+            updateDates(data, true)
+          }
+        } else {
+          updateDates(data, true)
+        }
+      } else {
+        if(config.EnableOnlyMB === true) {
+          if(data.finalAmount >= 1000000) {
+            updateDates(data, false)
+          }
+        } else {
+          updateDates(data, false)
+        }
       }
     });
     console.log(updateListTable.toString());
