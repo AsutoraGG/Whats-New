@@ -5,13 +5,14 @@ import { getChanges } from './src/file.js'
 import { config } from './src/conf.js';
 
 import path from 'path';
-import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from "fs"
+import { readFileSync, readdirSync, statSync, writeFileSync, existsSync, read, readFile } from "fs"
+import clipboardy from 'clipboardy'
 
 import Table from 'cli-table'
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 
-let folderpath = "D:\\Genshin Impact"
+let folderpath = "C:\\Games\\Genshin Impact game"
 /* ──────────────────────────────────────────────────────────────────── */
 function isExcludedFolder(folderName) {
     const excludedFolders = ['Culling_Data', 'Logs', 'MonoBleedingEdge', 'cache', 'BattlEye', 'NLog', "temp", "cfg", "EasyAntiCheat", "ThirdParty"];
@@ -111,7 +112,7 @@ function start() {
       name: "programlist",
       type: "list",
       message: "Please select which program to check: ",
-      choices: ["[1]: Genshin", "[2]: Rust", "[3]: Valorant", "[4]: R6S", "[5]: Back to Settings"]
+      choices: ["[1]: Genshin", "[2]: Tarkov", "[3]: R6S", "[4]: Back to Settings", "[5]: Check Diff for GI Assets", "[6]: FixJson"]
     }
   ]).then(answer => {
     answer = answer.programlist
@@ -119,21 +120,62 @@ function start() {
     Title();
 
     if(answer.includes("[1]")) {
-      folderpath = "D:\\Genshin Impact"
+      folderpath = "C:\\Games\\Genshin Impact game"
       main(FileNumber.genshin, "Genshin Impact")
     } else if(answer.includes("[2]")) {
-      folderpath = "C:\\Steam_SSD\\steamapps\\common\\Rust" // Change Here!
-      main(FileNumber.Rust, "Rust")
+      folderpath = "C:\\Games\\Tarkov" // Change Here!
+      main(FileNumber.Tarkov, "Tarkov")
     } else if(answer.includes("[3]")){
-      folderpath = "D:\\Riot Games\\VALORANT\\live"
-      main(FileNumber.Valorant, "Valorant")
-    } else if(answer.includes("[4]")){
-      folderpath = "C:\\Steam_SSD\\steamapps\\common\\Tom Clancy's Rainbow Six Siege"
+      folderpath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Tom Clancy's Rainbow Six Siege"
       main(FileNumber.Siege, "R6S")
-    } else {
+    } else if(answer.includes("[5]")) {
+      checkDiff_GIAssets();
+    } else if(answer.includes("[6]")) {
+      fixingGIAssetsJson();
+    }{
       settings()
     }
   })
+}
+
+function checkDiff_GIAssets() {
+  _print("info", "Loading input files", "入力ファイルをロード中")
+  const before  = JSON.parse(readFileSync('./src/input/1.json', 'utf-8'));
+  const after  = JSON.parse(readFileSync('./src/input/2.json', 'utf-8'));
+
+  _print("info", "Checking for Added Items...(This may take sevral minutes)", "追加されたアイテムを確認中...(これには数分かかる可能性があります)")
+
+  const addedItems = after.filter(afterItem => 
+    !before.some(beforeItem => beforeItem.Name === afterItem.Name)
+  );
+
+  if(addedItems === null) {
+    _print('error', "not detected added items", "新しくアイテムは検出されませんでした!");
+    Title()
+    start()
+  }
+
+  writeFileSync('./output.json', JSON.stringify(addedItems, null, 2))
+  _print("info", "Exported to output.json!", ".jsonに出力しました！")
+  Title()
+  start()
+}
+
+function fixingGIAssetsJson() {
+  _print("info", "Loading input files", "入力ファイルをロード中")
+  const data = JSON.parse(readFileSync('./output.json', 'utf-8'))
+  const filteredData = data.filter(item => item.Type !== 'MiHoYoBinData');
+
+  if(!data.some(item => item.Type === 'MiHoYoBinData')) {
+    const pathIds = data.map(item => item.Container).join('|');
+    clipboardy.writeSync(pathIds);
+    _print("info", "Saved!(Clipboard)", "保存されました!(クリップボード)")
+  } else {
+    const pathIds = data.map(item => item.Container).join('|');
+    writeFileSync('output.json', JSON.stringify(filteredData, null, 2))
+    clipboardy.writeSync(pathIds);
+    _print("info", "Specific Objects was deleted and saved!(Clipboard)", "特定のオブジェクトとが削除され保存されました!(クリップボード)")
+  }
 }
 
 async function main(number, softwareName) {
